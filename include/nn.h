@@ -35,6 +35,7 @@
 typedef struct Network {
     Layer *layers;      /**< Dynamic array of sequential Layer structures */
     usize  layer_count; /**< Total number of layers in the network */
+    usize  epoch_count; /**< Total number of epochs trained */
 } Network;
 
 
@@ -99,35 +100,6 @@ Outcome network_backward(Network *network, const Matrix *d_output);
  * @brief Magic number for the network data binary
  */
 #define NN_MAGIC 0x132B5FAu
-
-/**
- * @brief Major version number.
- */
-#define NN_VERSION_MAJOR 1
-
-/**
- * @brief Minor version number.
- */
-#define NN_VERSION_MINOR 0
-
-/**
- * @brief Patch version number.
- */
-#define NN_VERSION_PATCH 0
-
-/**
- * @brief Packed neural network version.
- *
- * The version is stored as:
- * - bits 31–24: major
- * - bits 23–16: minor
- * - bits 15–8: patch
- * - bits 7–0: reserved
- */
-#define NN_VERSION ((NN_VERSION_MAJOR << 24) | \
-                    (NN_VERSION_MINOR << 16) | \
-                    (NN_VERSION_PATCH << 8))
-
 
 /**
  * @brief Saves all the parameter of a given network

@@ -172,6 +172,10 @@ Outcome network_backward(Network *network, const Matrix *d_output) {
     return OUTCOME_OK;
 }
 
+/*==============================================================================
+ * Saving and Loading Models 
+ =============================================================================*/
+
 Outcome network_save(const Network *network, const char *file_name) {
     FILE *file = fopen(file_name, "wb");
     if (!file) {
@@ -182,9 +186,7 @@ Outcome network_save(const Network *network, const char *file_name) {
     const u32 magic_num = NN_MAGIC;
     fwrite(&magic_num, sizeof(magic_num), 1, file);
 
-    const u32 version = NN_VERSION;
-    fwrite(&version, sizeof(version), 1, file);
-
+    fwrite(&network->epoch_count, sizeof(usize), 1, file);
     fwrite(&network->layer_count, sizeof(usize), 1, file);
 
     for (usize i = 0; i < network->layer_count; i++) {
@@ -239,12 +241,7 @@ Outcome network_load(Network *network, const char *file_name) {
         return OUTCOME_FILE_INVALID;
     }
 
-    u32 version;
-    fread(&version, sizeof(u32), 1, file);
-    if (version != NN_VERSION) {
-        return OUTCOME_FILE_VERSION_MISMATCH;
-    }
-
+    fread(&network->epoch_count, sizeof(usize), 1, file);
     fread(&network->layer_count, sizeof(usize), 1, file);
 
     network->layers = malloc(network->layer_count * sizeof(*network->layers));
