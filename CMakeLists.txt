@@ -23,35 +23,21 @@ project(nn
     LANGUAGES C
 )
 
-# ==============================================================================
-# C Standard
-# ==============================================================================
-
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_C_EXTENSIONS OFF)
 
-# Generate compile_commands.json for clangd/LSP integration
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-# Default build configuration to Release if none is specified by the user
 if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Release CACHE STRING "Build type" FORCE)
 endif()
-
-# ==============================================================================
-# Source Files
-# ==============================================================================
 
 file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS
     "${CMAKE_CURRENT_SOURCE_DIR}/src/*.c"
 )
 
 add_executable(${PROJECT_NAME} ${SOURCES})
-
-# ==============================================================================
-# Libraries
-# ==============================================================================
 
 if(NOT MSVC)
     target_link_libraries(${PROJECT_NAME}
@@ -60,24 +46,14 @@ if(NOT MSVC)
     )
 endif()
 
-# ==============================================================================
-# Target Configuration
-# ==============================================================================
-
-# Output binary directly to the project root directory
 set_target_properties(${PROJECT_NAME} PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}"
 )
 
-# Header include paths
 target_include_directories(${PROJECT_NAME}
     PUBLIC
         "${CMAKE_CURRENT_SOURCE_DIR}/include"
 )
-
-# ==============================================================================
-# Compiler Warnings
-# ==============================================================================
 
 if(MSVC)
     target_compile_options(${PROJECT_NAME}
@@ -94,20 +70,12 @@ else()
     )
 endif()
 
-# ==============================================================================
-# Assertions
-# ==============================================================================
-
 # Disable assert() in Release builds.
 # assert() remains enabled in Debug builds.
 target_compile_definitions(${PROJECT_NAME}
     PRIVATE
         $<$<CONFIG:Release>:NDEBUG>
 )
-
-# ==============================================================================
-# Debug Build Options
-# ==============================================================================
 
 if(CMAKE_BUILD_TYPE STREQUAL "Debug" AND NOT MSVC)
     target_compile_options(${PROJECT_NAME}
@@ -123,10 +91,6 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug" AND NOT MSVC)
             -fsanitize=undefined
     )
 endif()
-
-# ==============================================================================
-# Release Build Optimizations
-# ==============================================================================
 
 include(CheckIPOSupported)
 
