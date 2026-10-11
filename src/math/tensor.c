@@ -22,7 +22,9 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 #include <stdbool.h>
+#include <math.h>
 
 
 // error handling will be implemented later
@@ -128,6 +130,8 @@ void tensor_sum(float *ret, const Tensor *t) {
     for (usize i = 0; i < t->size; i++) {
         sum += t->data[i];
     }
+
+    *ret = sum;
 }
 
 void tensor_hadamard_multiply(Tensor *result, const Tensor *a, const Tensor *b) {
@@ -161,12 +165,12 @@ void tensor_randomize(Tensor *t, float min, float max) {
 
 void tensor_he_uniform(Tensor *t, usize fan_in) {
     float limit = sqrtf(6.0f / (float)fan_in);
-    matrix_randomize(t, -limit, limit);
+    tensor_randomize(t, -limit, limit);
 }
 
 void tensor_xavier_uniform(Tensor *t, usize fan_in, usize fan_out) {
     float limit = sqrtf(6.0f / (float)(fan_in + fan_out));
-    matrix_randomize(t, -limit, limit);
+    tensor_randomize(t, -limit, limit);
 }
 
 void tensor_flatten(Tensor *t) {
