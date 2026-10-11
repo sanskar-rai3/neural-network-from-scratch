@@ -326,7 +326,7 @@ void network_train(Network *nn, const Dataset *dataset, Optimizer *optimizer, us
         !matrix_create(&Y, batch_size, dataset->class_count) ||
         !matrix_create(&prediction, batch_size, dataset->class_count) ||
         !matrix_create(&d_output, batch_size, dataset->class_count)) {
-        fprintf(stderr, "Failed to allocate training matrices\n");
+
         goto cleanup;
     }
 
@@ -368,10 +368,10 @@ void network_train(Network *nn, const Dataset *dataset, Optimizer *optimizer, us
             optimizer_step(optimizer, nn);
         }
 
-        epoch_loss /= (float)batch_count;
+        // epoch_loss /= (float)batch_count;
 
-        printf("epoch: %2zu | loss: %.6f\n",
-               epoch + 1, epoch_loss);
+        // printf("epoch: %2zu | loss: %.6f\n",
+        //        epoch + 1, epoch_loss);
     }
 
     matrix_destroy(&X);
@@ -418,7 +418,6 @@ void network_evaluate(float *ret_accuracy, const Network *nn, const Dataset *dat
 
     if (!matrix_create(&input, 1, dataset->input_count) ||
         !matrix_create(&prediction, 1, dataset->class_count)) {
-        fprintf(stderr, "Failed to allocate evaluation matrices\n");
 
         matrix_destroy(&input);
         matrix_destroy(&prediction);
