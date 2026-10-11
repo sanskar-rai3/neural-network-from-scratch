@@ -44,18 +44,6 @@
 #define TEST_IMAGE_PATH  "data/mnist/emnist-mnist-test-images-idx3-ubyte"
 #define TEST_LABEL_PATH  "data/mnist/emnist-mnist-test-labels-idx1-ubyte"
 
-static int argmax(const Matrix *prediction) {
-    int best = 0;
-
-    for (int i = 1; i < (int)prediction->cols; i++) {
-        if (prediction->data[i] > prediction->data[best]) {
-            best = i;
-        }
-    }
-
-    return best;
-}
-
 int main(void) {
     /* Opening mnist train files */
     FILE *train_image = fopen(TRAIN_IMAGE_PATH, "rb");
@@ -199,39 +187,15 @@ int main(void) {
     }
 
     /* Allocating memory for mnist test data */
-    float *test_image_data = malloc(TEST_IMAGE_COUNT * INPUT_SIZE * sizeof(float));
-    if (!test_image_data) {
-        perror("test_image_data");
-
-        fclose(test_image);
-        fclose(test_label);
-
-        optimizer_destroy(&optimizer);
-        network_destroy(&nn);
-        dataset_destroy(&dataset);
-
-        return 1;
-    }
-
-    u8 *test_label_data = malloc(TEST_IMAGE_COUNT * sizeof(u8));
-    if (!test_label_data) {
-        perror("test_label_data");
-
-        fclose(test_image);
-        fclose(test_label);
-
-        free(test_image_data);
-
-        optimizer_destroy(&optimizer);
-        network_destroy(&nn);
-        dataset_destroy(&dataset);
-
-        return 1;
-    }
+    Dataset test_dataset;
+    dataset_create(&test_dataset, TEST_IMAGE_COUNT, INPUT_SIZE, OUTPUT_SIZE);
 
     /* Reading mnist test data */
-    emnist_read_image_data_normalized(test_image_data, test_image, TEST_IMAGE_COUNT);
-    emnist_read_label_data(test_label_data, test_label, TEST_IMAGE_COUNT);
+    emnist_read_image_data_normalized(
+        test_dataset.data, test_image, TEST_IMAGE_COUNT);
+
+    emnist_read_label_data(
+        test_dataset.label, test_label, TEST_IMAGE_COUNT);
 
     /* Closing mnist test files */
     fclose(test_image);
@@ -240,63 +204,18 @@ int main(void) {
     /*=====================================================================*/
 
     /* Testing Model Accuracy */
-    usize correct = 0;
+    float accuracy;
 
-    Matrix pred_input = {0};
-    Matrix pred_output = {0};
-
-    if (!matrix_create(&pred_input, 1, INPUT_SIZE) ||
-        !matrix_create(&pred_output, 1, OUTPUT_SIZE)) {
-
-        fprintf(stderr, "Failed to allocate test matrices\n");
-
-        matrix_destroy(&pred_input);
-        matrix_destroy(&pred_output);
-
-        optimizer_destroy(&optimizer);
-        network_destroy(&nn);
-        dataset_destroy(&dataset);
-
-        free(test_image_data);
-        free(test_label_data);
-
-        return 1;
-    }
-
-    for (usize i = 0; i < TEST_IMAGE_COUNT; i++) {
-        /* Copy one image into input */
-        for (usize j = 0; j < INPUT_SIZE; j++) {
-            pred_input.data[j] = test_image_data[i * INPUT_SIZE + j];
-        }
-
-        /* Forward pass */
-        network_forward(&pred_output, &nn, &pred_input);
-
-        /* Get predicted class */
-        usize predicted = argmax(&pred_output);
-
-        /* Compare */
-        if (predicted == test_label_data[i]) {
-            correct++;
-        }
-    }
-
-    float accuracy = (float)correct / (float)TEST_IMAGE_COUNT * 100.0f;
+    network_evaluate(&accuracy, &nn, &test_dataset);
 
     printf("\n========== Test Accuracy ==========\n");
-    printf("Correct:   %zu / %zu\n", correct, TEST_IMAGE_COUNT);
     printf("Accuracy:  %.2f%%\n", accuracy);
-
-    matrix_destroy(&pred_input);
-    matrix_destroy(&pred_output);
 
     /* Clean up */
     optimizer_destroy(&optimizer);
     network_destroy(&nn);
     dataset_destroy(&dataset);
-
-    free(test_image_data);
-    free(test_label_data);
+    dataset_destroy(&test_dataset);
 
     return 0;
 }

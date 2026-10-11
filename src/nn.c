@@ -389,3 +389,67 @@ cleanup:
 
     return;
 }
+
+static int argmax(const Matrix *prediction) {
+    int best = 0;
+
+    for (int i = 1; i < (int)prediction->cols; i++) {
+        if (prediction->data[i] > prediction->data[best]) {
+            best = i;
+        }
+    }
+
+    return best;
+}
+
+void network_evaluate(float *ret_accuracy, const Network *nn, const Dataset *dataset) {
+    if (!nn || !dataset || !ret_accuracy ||
+        !dataset->data || !dataset->label ||
+        dataset->size == 0 ||
+        dataset->input_count == 0 ||
+        dataset->class_count == 0) {
+
+        return;
+    }
+
+    /* Creating prediction matrices */
+    Matrix input = {0};
+    Matrix prediction = {0};
+
+    if (!matrix_create(&input, 1, dataset->input_count) ||
+        !matrix_create(&prediction, 1, dataset->class_count)) {
+        fprintf(stderr, "Failed to allocate evaluation matrices\n");
+
+        matrix_destroy(&input);
+        matrix_destroy(&prediction);
+
+        return;
+    }
+
+    /* Testing model accuracy */
+    usize correct = 0;
+
+    for (usize i = 0; i < dataset->size; i++) {
+        /* Copy one image into input */
+        for (usize j = 0; j < dataset->input_count; j++) {
+            input.data[j] =
+                dataset->data[i * dataset->input_count + j];
+        }
+
+        /* Forward pass */
+        network_forward(&prediction, nn, &input);
+
+        /* Get predicted class */
+        usize predicted = (usize)argmax(&prediction);
+
+        /* Compare */
+        if (predicted == dataset->label[i]) {
+            correct++;
+        }
+    }
+
+    *ret_accuracy = (float)correct / (float)dataset->size * 100.0f;
+
+    matrix_destroy(&input);
+    matrix_destroy(&prediction);
+}

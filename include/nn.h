@@ -132,4 +132,6 @@ Outcome network_load(Network *network, const char *file_name);
  */
 void network_train(Network *network, const Dataset *dataset, Optimizer *optimizer, usize epoch, usize batch_size);
 
+void network_evaluate(float *ret_accuracy, const Network *network, const Dataset *dataset);
+
 #endif /* NETWORK_H */
