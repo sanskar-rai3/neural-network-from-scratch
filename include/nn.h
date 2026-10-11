@@ -23,7 +23,9 @@
 #include "common.h"
 #include "layer/layer.h"
 #include "math/matrix.h"
+#include "data-loader/dataset.h"
 #include "error/error.h"
+#include "optimizer.h"
 
 /*==============================================================================
  * Network Structure Definition
@@ -116,5 +118,18 @@ Outcome network_save(const Network *network, const char *file_name);
  * @param file_name Name of the file to load the data from
  */
 Outcome network_load(Network *network, const char *file_name);
+
+/*==============================================================================
+ * Training
+ *============================================================================*/
+
+/**
+ * @brief Trains network for specified epoch
+ * 
+ * @param network Pointer to the network to train
+ * @param dataset Pointer to the dataset
+ * @param epoch Number of epochs to train
+ */
+void network_train(Network *network, const Dataset *dataset, Optimizer *optimizer, usize epoch, usize batch_size);
 
 #endif /* NETWORK_H */

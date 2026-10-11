@@ -21,30 +21,29 @@
 
 #include <stdlib.h>
 
-void dataset_create(Dataset *dataset, usize size, usize input_count, usize label_count) {
+void dataset_create(Dataset *dataset, usize size, usize input_count, usize class_count) {
     dataset->size        = size;
     dataset->input_count = input_count;
-    dataset->label_count = label_count;
+    dataset->class_count = class_count;
     
     dataset->data   = malloc(size * input_count * sizeof(float));
-    dataset->labels = malloc(size * label_count * sizeof(float));
-    if (!dataset->data || !dataset->labels) {
+    dataset->label = malloc(size * class_count * sizeof(u8));
+    if (!dataset->data || !dataset->label) {
         free(dataset->data);
-        free(dataset->labels);
+        free(dataset->label);
         
         dataset->data = NULL;
-        dataset->labels = NULL;
+        dataset->label = NULL;
     }
 }
 
 void dataset_destroy(Dataset* dataset) {
     free(dataset->data);
-    free(dataset->labels);
-    free(dataset);
+    free(dataset->label);
 
     dataset->data = NULL;
-    dataset->labels = NULL;
+    dataset->label = NULL;
     dataset->size = 0;
     dataset->input_count = 0;
-    dataset->label_count = 0;
+    dataset->class_count = 0;
 }

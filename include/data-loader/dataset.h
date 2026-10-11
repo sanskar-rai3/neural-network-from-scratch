@@ -24,14 +24,14 @@
 
 typedef struct Dataset {
     float *data;
-    float *labels;
+    u8 *label;
     
     usize size;
     usize input_count;
-    usize label_count;
+    usize class_count;
 } Dataset;
 
-void dataset_create(Dataset *dataset, usize size, usize input_count, usize label_count);
+void dataset_create(Dataset *dataset, usize size, usize input_count, usize class_count);
 void dataset_destroy(Dataset *dataset);
 
 #endif // DATASET_H
