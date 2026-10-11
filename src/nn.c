@@ -21,6 +21,7 @@
 #include "nn.h" 
 #include "error/error.h"
 #include "layer/layer.h"
+#include "loss.h"
 #include "math/matrix.h"
 #include "error/error.h"
 
@@ -292,4 +293,162 @@ Outcome network_load(Network *network, const char *file_name) {
     }
 
     return OUTCOME_OK;
+}
+
+/*==============================================================================
+ * Training
+ *============================================================================*/
+
+static void labels_to_one_hot(Matrix *target, const u8 *labels) {
+    matrix_fill(target, 0.0f);
+
+    for (usize i = 0; i < target->rows; i++) {
+        target->data[i * target->cols + labels[i]] = 1.0f;
+    }
+}
+
+void network_train(Network *nn, const Dataset *dataset, Optimizer *optimizer, usize epochs, usize batch_size){
+    if (!nn || !dataset || !optimizer ||
+        !dataset->data || !dataset->label ||
+        dataset->size == 0 ||
+        batch_size == 0 ||
+        batch_size > dataset->size) {
+        
+        return;
+    }
+
+    Matrix X;
+    Matrix Y;
+    Matrix prediction;
+    Matrix d_output;
+
+    if (!matrix_create(&X, batch_size, dataset->input_count) ||
+        !matrix_create(&Y, batch_size, dataset->class_count) ||
+        !matrix_create(&prediction, batch_size, dataset->class_count) ||
+        !matrix_create(&d_output, batch_size, dataset->class_count)) {
+
+        goto cleanup;
+    }
+
+    const usize batch_count = dataset->size / batch_size;
+
+    for (usize epoch = 0; epoch < epochs; epoch++) {
+        float epoch_loss = 0.0f;
+
+        for (usize batch = 0; batch < batch_count; batch++) {
+            const usize start = batch * batch_size;
+
+            /* Copy input batch */
+            for (usize i = 0; i < batch_size; i++) {
+                for (usize j = 0; j < dataset->input_count; j++) {
+                    X.data[i * dataset->input_count + j] =
+                        dataset->data[
+                            (start + i) * dataset->input_count + j
+                        ];
+                }
+            }
+
+            /* Convert labels to one-hot vectors */
+            labels_to_one_hot(&Y, dataset->label + start);
+
+            /* Forward pass */
+            network_forward(&prediction, nn, &X);
+
+            /* Calculate loss */
+            epoch_loss += loss_cross_entropy(&prediction, &Y);
+
+            /* Softmax + cross-entropy backward */
+            loss_cross_entropy_softmax_backward(
+                &d_output, &prediction, &Y);
+
+            /* Backpropagation */
+            network_backward(nn, &d_output);
+
+            /* Update parameters */
+            optimizer_step(optimizer, nn);
+        }
+
+        // epoch_loss /= (float)batch_count;
+
+        // printf("epoch: %2zu | loss: %.6f\n",
+        //        epoch + 1, epoch_loss);
+    }
+
+    matrix_destroy(&X);
+    matrix_destroy(&Y);
+    matrix_destroy(&prediction);
+    matrix_destroy(&d_output);
+
+    return;
+
+cleanup:
+    matrix_destroy(&X);
+    matrix_destroy(&Y);
+    matrix_destroy(&prediction);
+    matrix_destroy(&d_output);
+
+    return;
+}
+
+static int argmax(const Matrix *prediction) {
+    int best = 0;
+
+    for (int i = 1; i < (int)prediction->cols; i++) {
+        if (prediction->data[i] > prediction->data[best]) {
+            best = i;
+        }
+    }
+
+    return best;
+}
+
+void network_evaluate(float *ret_accuracy, const Network *nn, const Dataset *dataset) {
+    if (!nn || !dataset || !ret_accuracy ||
+        !dataset->data || !dataset->label ||
+        dataset->size == 0 ||
+        dataset->input_count == 0 ||
+        dataset->class_count == 0) {
+
+        return;
+    }
+
+    /* Creating prediction matrices */
+    Matrix input = {0};
+    Matrix prediction = {0};
+
+    if (!matrix_create(&input, 1, dataset->input_count) ||
+        !matrix_create(&prediction, 1, dataset->class_count)) {
+
+        matrix_destroy(&input);
+        matrix_destroy(&prediction);
+
+        return;
+    }
+
+    /* Testing model accuracy */
+    usize correct = 0;
+
+    for (usize i = 0; i < dataset->size; i++) {
+        /* Copy one image into input */
+        for (usize j = 0; j < dataset->input_count; j++) {
+            input.data[j] =
+                dataset->data[i * dataset->input_count + j];
+        }
+
+        /* Forward pass */
+        network_forward(&prediction, nn, &input);
+
+        /* Get predicted class */
+        usize predicted = (usize)argmax(&prediction);
+
+        /* Compare */
+        if (predicted == dataset->label[i]) {
+            correct++;
+        }
+    }
+
+    *ret_accuracy = (float)correct / (float)dataset->size * 100.0f;
+
+    matrix_destroy(&input);
+    matrix_destroy(&prediction);
 }
