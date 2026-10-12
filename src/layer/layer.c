@@ -152,4 +152,6 @@ Error layer_backward(Matrix *d_input, Layer *layer, const Matrix *d_output) {
         return err;
 
     matrix_destroy(&dZ);
+
+    return ERROR_OK;
 }

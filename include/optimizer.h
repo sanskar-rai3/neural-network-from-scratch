@@ -57,7 +57,7 @@ typedef struct Optimizer {
  * @param learning_rate Learning rate used during parameter updates.
  * @param type          Optimization algorithm to use.
  */
-Outcome optimizer_init(Optimizer *optimizer, float learning_rate, OptimizerType type);
+Error optimizer_init(Optimizer *optimizer, float learning_rate, OptimizerType type);
 
 /**
  * @brief Destroys an optimizer and releases any resources it owns.
@@ -81,6 +81,6 @@ void optimizer_destroy(Optimizer *optimizer);
  * @param optimizer Pointer to the initialized Optimizer.
  * @param network   Pointer to the Network whose parameters will be updated.
  */
-Outcome optimizer_step(Optimizer *optimizer, Network *network);
+Error optimizer_step(Optimizer *optimizer, Network *network);
 
 #endif /* OPTIMIZER_H */

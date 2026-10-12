@@ -87,7 +87,7 @@ typedef struct LayerConfig {
  * @param config Pointer to the layer configuration parameters.
  * @return       1 on success, 0 on failure.
  */
-Outcome layer_init(Layer *layer, const LayerConfig *config);
+Error layer_init(Layer *layer, const LayerConfig *config);
 
 /**
  * @brief Frees all allocated memory owned by the layer.
@@ -108,7 +108,7 @@ void layer_destroy(Layer *layer);
  * @param layer  Pointer to the initialized Layer.
  * @param input  Input matrix (batch_size x input_size).
  */
-Outcome layer_forward(Matrix *output, Layer *layer, const Matrix *input);
+Error layer_forward(Matrix *output, Layer *layer, const Matrix *input);
 
 /*==============================================================================
  *  Backward Pass
@@ -131,6 +131,6 @@ Outcome layer_forward(Matrix *output, Layer *layer, const Matrix *input);
  * @param d_output  Gradient with respect to the layer output (dL/dA).
  *                  Must have the same shape as the layer's cached Z.
  */
-Outcome layer_backward(Matrix *d_input, Layer *layer, const Matrix *d_output);
+Error layer_backward(Matrix *d_input, Layer *layer, const Matrix *d_output);
 
 #endif /* LAYER_H */

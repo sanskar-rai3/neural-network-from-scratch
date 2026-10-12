@@ -21,6 +21,7 @@
 #define MATRIX_H
 
 #include "common.h"
+#include "error/error.h"
 
 /*==============================================================================
  * Matrix Structure Definition
@@ -48,7 +49,7 @@ typedef struct Matrix {
  *
  * @return 1 on success, 0 on failure.
  */
-int matrix_create(Matrix *mat, usize rows, usize cols);
+Error matrix_create(Matrix *mat, usize rows, usize cols);
 
 /**
  * @brief Creates a matrix by copying data from an existing buffer.
@@ -60,7 +61,7 @@ int matrix_create(Matrix *mat, usize rows, usize cols);
  *
  * @return 1 on success, 0 on failure.
  */
-int matrix_copy_buffer(Matrix *mat, usize rows, usize cols, float *buffer);
+Error matrix_copy_buffer(Matrix *mat, usize rows, usize cols, float *buffer);
 
 /**
  * @brief Releases the memory owned by a matrix and resets its dimensions.

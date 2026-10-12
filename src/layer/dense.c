@@ -27,20 +27,25 @@
  *============================================================================*/
 
 Error dense_init(Dense *layer, const DenseConfig *config) {
+    Error err;
     if (!layer || !config)
         return ERROR_INVALID_ARGS;
 
-    if (!matrix_create(&layer->weights, config->input_size, config->output_size))
-        return ERROR_ALLOCATION_FAILED;
+    err = matrix_create(&layer->weights, config->input_size, config->output_size);
+    if (err != ERROR_OK)
+        return err;
 
-    if (!matrix_create(&layer->bias, 1, config->output_size))
-        return ERROR_ALLOCATION_FAILED;
+    err = matrix_create(&layer->bias, 1, config->output_size);
+    if (err != ERROR_OK)
+        return err;
 
-    if (!matrix_create(&layer->d_weights, config->input_size, config->output_size))
-        return ERROR_ALLOCATION_FAILED;
+    err = matrix_create(&layer->d_weights, config->input_size, config->output_size);
+    if (err != ERROR_OK)
+        return err;
 
-    if (!matrix_create(&layer->d_bias, 1, config->output_size))
-        return ERROR_ALLOCATION_FAILED;
+    err = matrix_create(&layer->d_bias, 1, config->output_size);
+    if (err != ERROR_OK)
+        return err;
 
     /* Randomizing weights with He initialization */
     matrix_he_uniform(&layer->weights, config->input_size);
@@ -84,8 +89,9 @@ Error dense_forward(Matrix *output, Dense *layer, const Matrix *input) {
         
         matrix_destroy(&layer->input_cache);
 
-        if (!matrix_create(&layer->input_cache, input->rows, input->cols))
-            return ERROR_ALLOCATION_FAILED;
+        Error err = matrix_create(&layer->input_cache, input->rows, input->cols);
+        if (err != ERROR_OK)
+            return err;
     }
 
     matrix_copy(&layer->input_cache, input);
@@ -102,6 +108,7 @@ Error dense_forward(Matrix *output, Dense *layer, const Matrix *input) {
  *============================================================================*/
 
 Error dense_backward(Matrix *d_input, Dense *layer, const Matrix *dZ) {
+    Error err;
     if (!d_input || !layer || !dZ)
         return ERROR_INVALID_ARGS;
 
@@ -115,8 +122,9 @@ Error dense_backward(Matrix *d_input, Dense *layer, const Matrix *dZ) {
      * dW = X^T * dZ
      */
     Matrix X_T;
-    if (!matrix_create(&X_T, X->cols, X->rows))
-        return ERROR_ALLOCATION_FAILED;
+    err = matrix_create(&X_T, X->cols, X->rows);
+    if (err != ERROR_OK)
+        return err;
 
     matrix_transpose(&X_T, X);
     matrix_multiply(&layer->d_weights, &X_T, dZ);
@@ -133,8 +141,9 @@ Error dense_backward(Matrix *d_input, Dense *layer, const Matrix *dZ) {
      * dX = dZ * W^T
      */
     Matrix W_T;
-    if (!matrix_create(&W_T, W->cols, W->rows))
-        return ERROR_ALLOCATION_FAILED;
+    err = matrix_create(&W_T, W->cols, W->rows);
+    if (err != ERROR_OK)
+        return err;
 
     matrix_transpose(&W_T, W);
     matrix_multiply(d_input, dZ, &W_T);
