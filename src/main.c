@@ -93,24 +93,18 @@ int main(void) {
     /* Configuring layers */
     LayerConfig configs[] = {
         {
-            .layer_type  = LAYER_DENSE,
-
             .dense_config.input_size  = INPUT_SIZE,
             .dense_config.output_size = HIDDEN1_SIZE,
 
             .activation = ACT_RELU
         },
         {
-            .layer_type = LAYER_DENSE,
-
             .dense_config.input_size  = HIDDEN1_SIZE,
             .dense_config.output_size = HIDDEN2_SIZE,
 
             .activation = ACT_RELU
         },
         {
-            .layer_type = LAYER_DENSE,
-
             .dense_config.input_size  = HIDDEN2_SIZE,
             .dense_config.output_size = OUTPUT_SIZE,
 

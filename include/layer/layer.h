@@ -34,8 +34,6 @@
  */
 typedef enum LayerType {
     LAYER_DENSE = 0, /**< Fully connected dense layer. */
-    LAYER_CONVO,     /**< Convolutional layer. */
-    LAYER_MPOOL      /**< Max pooling layer. */
 } LayerType;
 
 /**
@@ -45,16 +43,8 @@ typedef enum LayerType {
  * forward and backward propagation for a specific layer type.
  */
 typedef struct Layer {
-    LayerType layer_type; /**< Type of the neural network layer. */
-
-    union {
-        Dense dense; /**< Dense layer parameters and state. */
-        // Convolutional convolutional;
-        // MPool mpool;
-    };
-
+    Dense dense; /**< Dense layer parameters and state. */
     ActivationType activation; /**< Activation function applied to the layer output. */
-
     Matrix z_cache; /**< Cached pre-activation values used during backpropagation. */
 } Layer;
 
@@ -64,13 +54,7 @@ typedef struct Layer {
  * The configuration stored in the union depends on the specified layer type.
  */
 typedef struct LayerConfig {
-    LayerType layer_type; /**< Type of the layer to initialize. */
-
-    union {
-        DenseConfig dense_config; /**< Configuration for a dense layer. */
-        // ConvoConfig convo_config;
-        // MPoolConfig mpool_config;
-    };
+    DenseConfig dense_config; /**< Configuration for a dense layer. */
 
     ActivationType activation; /**< Activation function to apply to the layer output. */
 } LayerConfig;
