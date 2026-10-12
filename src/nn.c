@@ -32,20 +32,20 @@
  * Creation & Destruction
  *============================================================================*/
 
-Outcome network_init(Network *network, const LayerConfig *configs, usize layer_count) {
+Error network_init(Network *network, const LayerConfig *configs, usize layer_count) {
     if (!network || !configs || !(layer_count > 0))
-        return OUTCOME_INVALID_ARGS;
+        return ERROR_INVALID_ARGS;
 
     network->layers = malloc(layer_count * sizeof(Layer));
     if (!network->layers) {
-        return OUTCOME_ALLOCATION_FAILED;
+        return ERROR_ALLOCATION_FAILED;
     }
 
     network->layer_count = layer_count;
 
     for (usize i = 0; i < layer_count; i++) {
-        Outcome outcome = layer_init(&network->layers[i], &configs[i]);
-        if (!outcome) {
+        Error err = layer_init(&network->layers[i], &configs[i]);
+        if (err != ERROR_OK) {
             while (i > 0) {
                 i--;
                 layer_destroy(&network->layers[i]);
@@ -55,11 +55,11 @@ Outcome network_init(Network *network, const LayerConfig *configs, usize layer_c
             network->layers = NULL;
             network->layer_count = 0;
 
-            return outcome;
+            return err;
         }
     }
 
-    return OUTCOME_OK;
+    return ERROR_OK;
 }
 
 void network_destroy(Network *network) {
@@ -79,28 +79,31 @@ void network_destroy(Network *network) {
  * Forward Pass
  *============================================================================*/
 
-Outcome network_forward(Matrix *output, const Network *network, const Matrix *input) {
+Error network_forward(Matrix *output, const Network *network, const Matrix *input) {
+    Error err;
     if (!output || !network || !input)
-        return OUTCOME_INVALID_ARGS;
+        return ERROR_INVALID_ARGS;
 
     /* Layer 1: Run input directly into a temp matrix */
     Matrix current;
-    if (!matrix_create(&current, input->rows, network->layers[0].dense.weights.cols))
-        return OUTCOME_ALLOCATION_FAILED;
+    err = matrix_create(&current, input->rows, network->layers[0].dense.weights.cols);
+    if (err != ERROR_OK)
+        return err;
 
-    Outcome outcome = layer_forward(&current, &network->layers[0], input);
-    if (!outcome)
-        return outcome;
+    err = layer_forward(&current, &network->layers[0], input);
+    if (err != ERROR_OK)
+        return err;
 
     /* Middle Layers: Run current -> next, swap */
     for (usize i = 1; i < network->layer_count - 1; i++) {
         Matrix next;
-        if (!matrix_create(&next, input->rows, network->layers[i].dense.weights.cols))
-            return OUTCOME_ALLOCATION_FAILED;
+        err = matrix_create(&next, input->rows, network->layers[i].dense.weights.cols);
+        if (err != ERROR_OK)
+            return err;
 
-        outcome = layer_forward(&next, &network->layers[i], &current);
-        if (!outcome)
-            return outcome;
+        err = layer_forward(&next, &network->layers[i], &current);
+        if (err != ERROR_OK)
+            return err;
 
         matrix_destroy(&current);
         current = next;
@@ -108,9 +111,9 @@ Outcome network_forward(Matrix *output, const Network *network, const Matrix *in
 
     /* Final Layer: Compute directly into output */
     if (network->layer_count > 1) {
-        outcome = layer_forward(output, &network->layers[network->layer_count - 1], &current);
-        if (!outcome)
-            return outcome;
+        err = layer_forward(output, &network->layers[network->layer_count - 1], &current);
+        if (err != ERROR_OK)
+            return err;
 
         matrix_destroy(&current);
     } else {
@@ -118,16 +121,17 @@ Outcome network_forward(Matrix *output, const Network *network, const Matrix *in
         *output = current;
     }
 
-    return OUTCOME_OK;
+    return ERROR_OK;
 }
 
 /*==============================================================================
  * Backward Pass
  *============================================================================*/
 
-Outcome network_backward(Network *network, const Matrix *d_output) {
+Error network_backward(Network *network, const Matrix *d_output) {
+    Error err;
     if (!network || !d_output)
-        return OUTCOME_INVALID_ARGS;
+        return ERROR_INVALID_ARGS;
 
     /*
      * Initially:
@@ -135,8 +139,9 @@ Outcome network_backward(Network *network, const Matrix *d_output) {
      * d_current = dL/dA of the final layer
      */
     Matrix d_current;
-    if (!matrix_create(&d_current, d_output->rows, d_output->cols))
-        return OUTCOME_ALLOCATION_FAILED;
+    err = matrix_create(&d_current, d_output->rows, d_output->cols);
+    if (err != ERROR_OK)
+        return err;
 
     matrix_copy(&d_current, d_output);
 
@@ -149,16 +154,17 @@ Outcome network_backward(Network *network, const Matrix *d_output) {
          * X has the same shape as the layer's cached input.
          */
         Matrix d_next;
-        if (!matrix_create(&d_next, layer->dense.input_cache.rows, layer->dense.input_cache.cols))
-            return OUTCOME_ALLOCATION_FAILED;
+        err = matrix_create(&d_next, layer->dense.input_cache.rows, layer->dense.input_cache.cols);
+        if (err != ERROR_OK)
+            return err;
 
         /*
          * d_current = dL/dA
          * d_next    = dL/dX
          */
-        Outcome outcome = layer_backward(&d_next, layer, &d_current);
-        if (!outcome)
-            return outcome;
+        err = layer_backward(&d_next, layer, &d_current);
+        if (err != ERROR_OK)
+            return err;
 
         matrix_destroy(&d_current);
 
@@ -170,17 +176,17 @@ Outcome network_backward(Network *network, const Matrix *d_output) {
      */
     matrix_destroy(&d_current);
 
-    return OUTCOME_OK;
+    return ERROR_OK;
 }
 
 /*==============================================================================
  * Saving and Loading Models 
  =============================================================================*/
 
-Outcome network_save(const Network *network, const char *file_name) {
+Error network_save(const Network *network, const char *file_name) {
     FILE *file = fopen(file_name, "wb");
     if (!file) {
-        return OUTCOME_FILE_CREATE_FAILED;
+        return ERROR_FILE_CREATE_FAILED;
     }
 
     /* Saving the magic number */
@@ -222,24 +228,24 @@ Outcome network_save(const Network *network, const char *file_name) {
             }
 
             default:
-                return OUTCOME_LAYER_UNKNOWN;
+                return ERROR_LAYER_UNKNOWN;
         }
     }
 
-    return OUTCOME_OK;
+    return ERROR_OK;
 }
 
 
-Outcome network_load(Network *network, const char *file_name) {
+Error network_load(Network *network, const char *file_name) {
     FILE *file = fopen(file_name, "rb");
     if (!file) {
-        return OUTCOME_FILE_OPEN_FAILED;
+        return ERROR_FILE_OPEN_FAILED;
     }
 
     u32 magic_num;
     fread(&magic_num, sizeof(u32), 1, file);
     if (magic_num != NN_MAGIC) {
-        return OUTCOME_FILE_INVALID;
+        return ERROR_FILE_INVALID;
     }
 
     fread(&network->epoch_count, sizeof(usize), 1, file);
@@ -288,11 +294,11 @@ Outcome network_load(Network *network, const char *file_name) {
             }
 
             default:
-                return OUTCOME_LAYER_UNKNOWN;
+                return ERROR_LAYER_UNKNOWN;
         }
     }
 
-    return OUTCOME_OK;
+    return ERROR_OK;
 }
 
 /*==============================================================================
@@ -307,14 +313,15 @@ static void labels_to_one_hot(Matrix *target, const u8 *labels) {
     }
 }
 
-void network_train(Network *nn, const Dataset *dataset, Optimizer *optimizer, usize epochs, usize batch_size){
+Error network_train(Network *nn, const Dataset *dataset, Optimizer *optimizer, usize epochs, usize batch_size) {
+    Error err;
     if (!nn || !dataset || !optimizer ||
         !dataset->data || !dataset->label ||
         dataset->size == 0 ||
         batch_size == 0 ||
         batch_size > dataset->size) {
         
-        return;
+        return ERROR_INVALID_ARGS;
     }
 
     Matrix X;
@@ -322,10 +329,10 @@ void network_train(Network *nn, const Dataset *dataset, Optimizer *optimizer, us
     Matrix prediction;
     Matrix d_output;
 
-    if (!matrix_create(&X, batch_size, dataset->input_count) ||
-        !matrix_create(&Y, batch_size, dataset->class_count) ||
-        !matrix_create(&prediction, batch_size, dataset->class_count) ||
-        !matrix_create(&d_output, batch_size, dataset->class_count)) {
+    if (matrix_create(&X, batch_size, dataset->input_count) != ERROR_OK ||
+        matrix_create(&Y, batch_size, dataset->class_count) != ERROR_OK||
+        matrix_create(&prediction, batch_size, dataset->class_count) != ERROR_OK||
+        matrix_create(&d_output, batch_size, dataset->class_count) != ERROR_OK) {
 
         goto cleanup;
     }
@@ -333,7 +340,7 @@ void network_train(Network *nn, const Dataset *dataset, Optimizer *optimizer, us
     const usize batch_count = dataset->size / batch_size;
 
     for (usize epoch = 0; epoch < epochs; epoch++) {
-        float epoch_loss = 0.0f;
+        // float epoch_loss = 0.0f;
 
         for (usize batch = 0; batch < batch_count; batch++) {
             const usize start = batch * batch_size;
@@ -352,20 +359,26 @@ void network_train(Network *nn, const Dataset *dataset, Optimizer *optimizer, us
             labels_to_one_hot(&Y, dataset->label + start);
 
             /* Forward pass */
-            network_forward(&prediction, nn, &X);
+            err = network_forward(&prediction, nn, &X);
+            if (err != ERROR_OK)
+                return err;
 
             /* Calculate loss */
-            epoch_loss += loss_cross_entropy(&prediction, &Y);
+            // epoch_loss += loss_cross_entropy(&prediction, &Y);
 
             /* Softmax + cross-entropy backward */
             loss_cross_entropy_softmax_backward(
                 &d_output, &prediction, &Y);
 
             /* Backpropagation */
-            network_backward(nn, &d_output);
+            err = network_backward(nn, &d_output);
+            if (err != ERROR_OK)
+                return err;
 
             /* Update parameters */
-            optimizer_step(optimizer, nn);
+            err = optimizer_step(optimizer, nn);
+            if (err != ERROR_OK)
+                return err;
         }
 
         // epoch_loss /= (float)batch_count;
@@ -379,7 +392,7 @@ void network_train(Network *nn, const Dataset *dataset, Optimizer *optimizer, us
     matrix_destroy(&prediction);
     matrix_destroy(&d_output);
 
-    return;
+    return ERROR_OK;
 
 cleanup:
     matrix_destroy(&X);
@@ -387,7 +400,7 @@ cleanup:
     matrix_destroy(&prediction);
     matrix_destroy(&d_output);
 
-    return;
+    return ERROR_ALLOCATION_FAILED;
 }
 
 static int argmax(const Matrix *prediction) {
@@ -402,27 +415,28 @@ static int argmax(const Matrix *prediction) {
     return best;
 }
 
-void network_evaluate(float *ret_accuracy, const Network *nn, const Dataset *dataset) {
+Error network_evaluate(float *ret_accuracy, const Network *nn, const Dataset *dataset) {
+    Error err;
     if (!nn || !dataset || !ret_accuracy ||
         !dataset->data || !dataset->label ||
         dataset->size == 0 ||
         dataset->input_count == 0 ||
         dataset->class_count == 0) {
 
-        return;
+        return ERROR_INVALID_ARGS;
     }
 
     /* Creating prediction matrices */
-    Matrix input = {0};
-    Matrix prediction = {0};
+    Matrix input;
+    Matrix prediction;
 
-    if (!matrix_create(&input, 1, dataset->input_count) ||
-        !matrix_create(&prediction, 1, dataset->class_count)) {
+    if (matrix_create(&input, 1, dataset->input_count) != ERROR_OK ||
+        matrix_create(&prediction, 1, dataset->class_count) != ERROR_OK) {
 
         matrix_destroy(&input);
         matrix_destroy(&prediction);
 
-        return;
+        return ERROR_ALLOCATION_FAILED;
     }
 
     /* Testing model accuracy */
@@ -436,7 +450,9 @@ void network_evaluate(float *ret_accuracy, const Network *nn, const Dataset *dat
         }
 
         /* Forward pass */
-        network_forward(&prediction, nn, &input);
+        err = network_forward(&prediction, nn, &input);
+        if (err != ERROR_OK)
+            return err;
 
         /* Get predicted class */
         usize predicted = (usize)argmax(&prediction);
@@ -451,4 +467,6 @@ void network_evaluate(float *ret_accuracy, const Network *nn, const Dataset *dat
 
     matrix_destroy(&input);
     matrix_destroy(&prediction);
+
+    return ERROR_OK;
 }

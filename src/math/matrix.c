@@ -32,34 +32,36 @@
  * Creation & Destruction
  *============================================================================*/
 
-int matrix_create(Matrix *mat, usize rows, usize cols) {
+Error matrix_create(Matrix *mat, usize rows, usize cols) {
     assert(mat);
     assert(rows > 0);
     assert(cols > 0);
 
     float *data = malloc(rows * cols * sizeof(float));
     if (!data)
-        return OUTCOME_ALLOCATION_FAILED;
+        return ERROR_ALLOCATION_FAILED;
 
     mat->rows = rows;
     mat->cols = cols;
     mat->data = data;
 
-    return OUTCOME_OK;
+    return ERROR_OK;
 }
 
-int matrix_copy_buffer(Matrix *mat, usize rows, usize cols, float *buffer) {
+Error matrix_copy_buffer(Matrix *mat, usize rows, usize cols, float *buffer) {
+    Error err;
+
     assert(mat);
     assert(buffer);
     assert(rows > 0);
     assert(cols > 0);
 
-    if (!matrix_create(mat, rows, cols)) {
-        return 0;
-    }
+    err = matrix_create(mat, rows, cols);
+    if (err != ERROR_OK)
+        return err;
 
     memcpy(mat->data, buffer, rows * cols * sizeof(float));
-    return 1;
+    return ERROR_OK;
 }
 
 void matrix_destroy(Matrix *mat) {

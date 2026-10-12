@@ -27,16 +27,16 @@
  * Creation & Destruction
  *============================================================================*/
 
-Outcome optimizer_init(Optimizer *optimizer, float learning_rate, OptimizerType type) {
+Error optimizer_init(Optimizer *optimizer, float learning_rate, OptimizerType type) {
     if (!(optimizer) ||
         !(learning_rate > 0.0f)) {
-        return OUTCOME_INVALID_ARGS;
+        return ERROR_INVALID_ARGS;
     }
 
     optimizer->type = type;
     optimizer->learning_rate = learning_rate;
 
-    return OUTCOME_OK;
+    return ERROR_OK;
 }
 
 void optimizer_destroy(Optimizer *optimizer) {
@@ -48,9 +48,9 @@ void optimizer_destroy(Optimizer *optimizer) {
  * Optimization
  *============================================================================*/
 
-Outcome optimizer_step(Optimizer *optimizer, Network *network) {
+Error optimizer_step(Optimizer *optimizer, Network *network) {
     if (!optimizer || !network)
-        return OUTCOME_INVALID_ARGS;
+        return ERROR_INVALID_ARGS;
 
     switch (optimizer->type) {
         case OPT_SGD: {
@@ -75,8 +75,8 @@ Outcome optimizer_step(Optimizer *optimizer, Network *network) {
        
         case OPT_NULL:
         default:
-            return OUTCOME_OPT_UNKNOWN;
+            return ERROR_OPT_UNKNOWN;
     }
 
-    return OUTCOME_OK;
+    return ERROR_OK;
 }
