@@ -47,7 +47,7 @@ typedef struct Matrix {
  * @param rows Number of rows (must be > 0).
  * @param cols Number of columns (must be > 0).
  *
- * @return 1 on success, 0 on failure.
+ * @return ERROR_OK on success, corresponding error code on failure.
  */
 Error matrix_create(Matrix *mat, usize rows, usize cols);
 
@@ -59,7 +59,7 @@ Error matrix_create(Matrix *mat, usize rows, usize cols);
  * @param cols   Number of columns (must be > 0).
  * @param buffer Source buffer containing (rows * cols) float elements.
  *
- * @return 1 on success, 0 on failure.
+ * @return ERROR_OK on success, corresponding error code on failure.
  */
 Error matrix_copy_buffer(Matrix *mat, usize rows, usize cols, float *buffer);
 
@@ -81,6 +81,7 @@ void matrix_destroy(Matrix *mat);
  * @param mat Pointer to the matrix.
  * @param row Zero-based row index.
  * @param col Zero-based column index.
+ *
  * @return    The float value stored at (row, col).
  */
 float matrix_get(const Matrix *mat, usize row, usize col);
@@ -104,6 +105,7 @@ void matrix_set(Matrix *mat, usize row, usize col, float value);
  * @brief Returns the total number of elements in the matrix (rows * cols).
  *
  * @param mat Pointer to the matrix.
+ *
  * @return    Total element count.
  */
 usize matrix_size(const Matrix *mat);

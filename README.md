@@ -2,9 +2,9 @@
 
 [![License: GPL v3 or later](https://img.shields.io/badge/License-GPL%20v3%20or%20later-blue.svg)](https://www.gnu.org/licenses/gpl-3.0.html)
 
-A feed-forward neural network implemented entirely in C, without machine-learning frameworks. The goal is to understand how neural networks work internally by implementing the underlying mathematics and components directly rather than hiding them behind high-level libraries.
+A dense neural network implemented entirely in C, without machine-learning frameworks. The goal is to understand how neural networks work internally by implementing the mathematics and components directly rather than hiding them behind high-level libraries.
 
-Supports matrix operations, MNIST loading, dense layers, activation functions (ReLU, Leaky ReLU, Sigmoid, Tanh, Softmax), loss functions (MSE, Cross-Entropy), backpropagation, configurable multi-layer networks, SGD optimization, MNIST training/inference/evaluation, and SDL2-based sample rendering.
+Supports matrix operations, EMNIST loading, dense layers, activation functions (ReLU, Leaky ReLU, Sigmoid, Tanh, Softmax), loss functions (MSE, Cross-Entropy), backpropagation, configurable multi-layer networks, SGD optimization, and EMNIST training/inference/evaluation.
 
 ## Documentation
 
@@ -17,7 +17,7 @@ cmake -S . -B build
 cmake --build build
 ```
 
-Run from the project root so relative MNIST paths resolve:
+Run from the project root so relative EMNIST paths resolve:
 
 ```bash
 ./nn
