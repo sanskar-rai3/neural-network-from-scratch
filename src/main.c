@@ -18,17 +18,16 @@
  */
 
 #include "common.h"
+#include "error/error.h"
 #include "nn.h"
 #include "data-loader/dataset.h"
 #include "optimizer.h"
-#include "math/matrix.h"
 
 #include "data-loader/emnist_loader.h"
 
 #include <stdio.h>
-#include <stdlib.h>
 
-#define EPOCH         5
+#define EPOCH         1
 #define LEARNING_RATE 0.01
 
 #define INPUT_SIZE  (EMNIST_ROWS * EMNIST_COLS)
@@ -36,7 +35,7 @@
 #define HIDDEN2_SIZE 128
 #define OUTPUT_SIZE  10
 
-#define BATCH_SIZE 1
+#define BATCH_SIZE 64
 
 #define TRAIN_IMAGE_PATH  "data/mnist/emnist-mnist-train-images-idx3-ubyte"
 #define TRAIN_LABEL_PATH  "data/mnist/emnist-mnist-train-labels-idx1-ubyte"
@@ -45,6 +44,7 @@
 #define TEST_LABEL_PATH  "data/mnist/emnist-mnist-test-labels-idx1-ubyte"
 
 int main(void) {
+    Error err;
     /* Opening mnist train files */
     FILE *train_image = fopen(TRAIN_IMAGE_PATH, "rb");
     if (!train_image) {
@@ -120,7 +120,8 @@ int main(void) {
 
     /* Network initialization */
     Network nn;
-    if (!network_init(&nn, configs, sizeof(configs) / sizeof(configs[0]))) {
+    err = network_init(&nn, configs, sizeof(configs) / sizeof(configs[0]));
+    if (err != ERROR_OK) {
         fprintf(stderr, "Error initializing network\n");
 
         dataset_destroy(&dataset);

@@ -53,7 +53,7 @@ typedef struct Network {
  * @param layer_count Number of layers to create.
  * @return            1 on success, 0 on failure.
  */
-Outcome network_init(Network *network, const LayerConfig *configs, usize layer_count);
+Error network_init(Network *network, const LayerConfig *configs, usize layer_count);
 
 /**
  * @brief Frees all dynamic memory owned by the network and its constituent layers.
@@ -76,7 +76,7 @@ void network_destroy(Network *network);
  * @param network Pointer to the initialized Network.
  * @param input   Input matrix (batch_size x initial_input_size).
  */
-Outcome network_forward(Matrix *output, const Network *network, const Matrix *input);
+Error network_forward(Matrix *output, const Network *network, const Matrix *input);
 
 /*==============================================================================
  * Backward Pass
@@ -92,7 +92,7 @@ Outcome network_forward(Matrix *output, const Network *network, const Matrix *in
  * @param d_output Gradient of the loss with respect to the network output
  *                 (dL/dA), with shape (batch_size x output_size).
  */
-Outcome network_backward(Network *network, const Matrix *d_output);
+Error network_backward(Network *network, const Matrix *d_output);
 
 /*==============================================================================
  * Saving and Loading Models 
@@ -109,7 +109,7 @@ Outcome network_backward(Network *network, const Matrix *d_output);
  * @param network Pointer to the input network
  * @param file_name Name of the file to store the data
  */
-Outcome network_save(const Network *network, const char *file_name);
+Error network_save(const Network *network, const char *file_name);
 
 /**
  * @brief Loads all the data from file
@@ -117,7 +117,7 @@ Outcome network_save(const Network *network, const char *file_name);
  * @param network Pointer to the output network
  * @param file_name Name of the file to load the data from
  */
-Outcome network_load(Network *network, const char *file_name);
+Error network_load(Network *network, const char *file_name);
 
 /*==============================================================================
  * Training
@@ -130,8 +130,8 @@ Outcome network_load(Network *network, const char *file_name);
  * @param dataset Pointer to the dataset
  * @param epoch Number of epochs to train
  */
-void network_train(Network *network, const Dataset *dataset, Optimizer *optimizer, usize epoch, usize batch_size);
+Error network_train(Network *network, const Dataset *dataset, Optimizer *optimizer, usize epoch, usize batch_size);
 
-void network_evaluate(float *ret_accuracy, const Network *network, const Dataset *dataset);
+Error network_evaluate(float *ret_accuracy, const Network *network, const Dataset *dataset);
 
 #endif /* NETWORK_H */
