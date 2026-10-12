@@ -51,7 +51,8 @@ typedef struct Network {
  * @param network     Pointer to the Network structure to initialize.
  * @param configs     Array of LayerConfig structures defining each layer.
  * @param layer_count Number of layers to create.
- * @return            1 on success, 0 on failure.
+ *
+ * @return ERROR_OK on success, corresponding error code on failure.
  */
 Error network_init(Network *network, const LayerConfig *configs, usize layer_count);
 
@@ -75,6 +76,8 @@ void network_destroy(Network *network);
  * @param output Destination matrix to store the final output (batch_size x final_output_size).
  * @param network Pointer to the initialized Network.
  * @param input   Input matrix (batch_size x initial_input_size).
+ *
+ * @return ERROR_OK on success, corresponding error code on failure.
  */
 Error network_forward(Matrix *output, const Network *network, const Matrix *input);
 
@@ -91,6 +94,8 @@ Error network_forward(Matrix *output, const Network *network, const Matrix *inpu
  * @param network  Pointer to the initialized Network.
  * @param d_output Gradient of the loss with respect to the network output
  *                 (dL/dA), with shape (batch_size x output_size).
+ *
+ * @return ERROR_OK on success, corresponding error code on failure.
  */
 Error network_backward(Network *network, const Matrix *d_output);
 
@@ -99,23 +104,27 @@ Error network_backward(Network *network, const Matrix *d_output);
  *============================================================================*/
 
 /**
- * @brief Magic number for the network data binary
+ * @brief Magic number for the network data binary.
  */
 #define NN_MAGIC 0x132B5FAu
 
 /**
- * @brief Saves all the parameter of a given network
+ * @brief Saves all the parameter of a given network.
  *
- * @param network Pointer to the input network
- * @param file_name Name of the file to store the data
+ * @param network Pointer to the input network.
+ * @param file_name Name of the file to store the data.
+ *
+ * @return ERROR_OK on success, corresponding error code on failure.
  */
 Error network_save(const Network *network, const char *file_name);
 
 /**
- * @brief Loads all the data from file
+ * @brief Loads all the data from file.
  *
- * @param network Pointer to the output network
- * @param file_name Name of the file to load the data from
+ * @param network Pointer to the output network.
+ * @param file_name Name of the file to load the data from.
+ *
+ * @return ERROR_OK on success, corresponding error code on failure.
  */
 Error network_load(Network *network, const char *file_name);
 
@@ -124,14 +133,25 @@ Error network_load(Network *network, const char *file_name);
  *============================================================================*/
 
 /**
- * @brief Trains network for specified epoch
+ * @brief Trains network for specified epoch.
  * 
- * @param network Pointer to the network to train
- * @param dataset Pointer to the dataset
- * @param epoch Number of epochs to train
+ * @param network Pointer to the network to train.
+ * @param dataset Pointer to the dataset.
+ * @param epoch Number of epochs to train.
+ *
+ * @return ERROR_OK on success, corresponding error code on failure.
  */
 Error network_train(Network *network, const Dataset *dataset, Optimizer *optimizer, usize epoch, usize batch_size);
 
+/**
+ * @brief Evaluates the accuracy of a Network model.
+ * 
+ * @param ret_accuracy Pointer to the float to store accuracy.
+ * @param network Pointer to the network to evaluate.
+ * @param dataset Pointer to the dataset.
+ *
+ * @return ERROR_OK on success, corresponding error code on failure.
+ */
 Error network_evaluate(float *ret_accuracy, const Network *network, const Dataset *dataset);
 
 #endif /* NETWORK_H */

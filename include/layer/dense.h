@@ -59,7 +59,8 @@ typedef struct DenseConfig {
  * 
  * @param layer       Pointer to the Dense layer structure to initialize.
  * @param config      Pointer to the configurations for the dense layer.
- * @return            1 on success, 0 on failure.
+ *
+ * @return            ERROR_OK on success, corresponding error code on failure.
  */
 Error dense_init(Dense *layer, const DenseConfig *config);
 
@@ -81,6 +82,8 @@ void dense_destroy(Dense *layer);
  *               with shape (batch_size x output_size).
  * @param layer  Pointer to the initialized Dense layer.
  * @param input  Input matrix of shape (batch_size x input_size).
+ *
+ * @return            ERROR_OK on success, corresponding error code on failure.
  */
 Error dense_forward(Matrix *output, Dense *layer, const Matrix *input);
 
@@ -106,6 +109,8 @@ Error dense_forward(Matrix *output, Dense *layer, const Matrix *input);
  *                  (batch_size x input_size).
  * @param d_output  Gradient with respect to the dense layer's output
  *                  (dL/dOutput), of shape (batch_size x output_size).
+ *
+ * @return            ERROR_OK on success, corresponding error code on failure.
  */
 Error dense_backward(Matrix *d_input, Dense *layer, const Matrix *dZ);
 

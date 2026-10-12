@@ -30,13 +30,6 @@
  *============================================================================*/
 
 /**
- * @brief Enumeration of the different types of neural network layers.
- */
-typedef enum LayerType {
-    LAYER_DENSE = 0, /**< Fully connected dense layer. */
-} LayerType;
-
-/**
  * @brief Represents a neural network layer.
  *
  * A Layer contains the parameters and state required to perform
@@ -44,7 +37,9 @@ typedef enum LayerType {
  */
 typedef struct Layer {
     Dense dense; /**< Dense layer parameters and state. */
+
     ActivationType activation; /**< Activation function applied to the layer output. */
+
     Matrix z_cache; /**< Cached pre-activation values used during backpropagation. */
 } Layer;
 
@@ -69,7 +64,8 @@ typedef struct LayerConfig {
  *
  * @param layer  Pointer to the Layer structure to initialize.
  * @param config Pointer to the layer configuration parameters.
- * @return       1 on success, 0 on failure.
+ *
+ * @return ERROR_OK on success, corresponding error code on failure.
  */
 Error layer_init(Layer *layer, const LayerConfig *config);
 
@@ -77,6 +73,8 @@ Error layer_init(Layer *layer, const LayerConfig *config);
  * @brief Frees all allocated memory owned by the layer.
  *
  * @param layer Pointer to the Layer to destroy.
+ * 
+ * @return ERROR_OK on success, corresponding error code on failure.
  */
 void layer_destroy(Layer *layer);
 
@@ -91,6 +89,8 @@ void layer_destroy(Layer *layer);
  * @param output Destination matrix to store the results (batch_size x output_size).
  * @param layer  Pointer to the initialized Layer.
  * @param input  Input matrix (batch_size x input_size).
+ *
+ * @return ERROR_OK on success, corresponding error code on failure.
  */
 Error layer_forward(Matrix *output, Layer *layer, const Matrix *input);
 
@@ -114,6 +114,8 @@ Error layer_forward(Matrix *output, Layer *layer, const Matrix *input);
  * @param layer     Pointer to the initialized Layer.
  * @param d_output  Gradient with respect to the layer output (dL/dA).
  *                  Must have the same shape as the layer's cached Z.
+ *
+ * @return ERROR_OK on success, corresponding error code on failure.
  */
 Error layer_backward(Matrix *d_input, Layer *layer, const Matrix *d_output);
 

@@ -34,6 +34,7 @@
  *
  * @param prediction Pointer to the predicted output matrix (batch_size x outputs).
  * @param target     Pointer to the target ground truth matrix (batch_size x outputs).
+ *
  * @return           The calculated MSE loss value.
  */
 float loss_mse(const Matrix *prediction, const Matrix *target);
@@ -45,6 +46,7 @@ float loss_mse(const Matrix *prediction, const Matrix *target);
  *
  * @param prediction Pointer to predicted probability distribution matrix (batch_size x classes).
  * @param target     Pointer to one-hot encoded ground truth matrix (batch_size x classes).
+ *
  * @return           The calculated Cross-Entropy loss value.
  */
 float loss_cross_entropy(const Matrix *prediction, const Matrix *target);
