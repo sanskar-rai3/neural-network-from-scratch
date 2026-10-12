@@ -200,36 +200,28 @@ Error network_save(const Network *network, const char *file_name) {
         Layer *layer = &network->layers[i];
 
         /* Save the layer type and layer's activation function */
-        fwrite(&layer->layer_type, sizeof(layer->layer_type), 1, file);
         fwrite(&layer->activation, sizeof(layer->activation), 1, file);
 
-        switch (layer->layer_type) {
-            case LAYER_DENSE: {
-                Dense *dense = &layer->dense;
+        Dense *dense = &layer->dense;
 
-                /* Save matrix dimensions */
-                fwrite(&dense->weights.rows, sizeof(usize), 1, file);
-                fwrite(&dense->weights.cols, sizeof(usize), 1, file);
+        /* Save matrix dimensions */
+        fwrite(&dense->weights.rows, sizeof(usize), 1, file);
+        fwrite(&dense->weights.cols, sizeof(usize), 1, file);
 
-                /* Save matrix data */
-                usize weight_count = dense->weights.rows * dense->weights.cols;
+        /* Save matrix data */
+        usize weight_count = dense->weights.rows * dense->weights.cols;
 
-                fwrite(dense->weights.data, sizeof(float), weight_count, file);
+        fwrite(dense->weights.data, sizeof(float), weight_count, file);
 
-                /* Bias matrix */
-                fwrite(&dense->bias.rows, sizeof(usize), 1, file);
-                fwrite(&dense->bias.cols, sizeof(usize), 1, file);
+        /* Bias matrix */
+        fwrite(&dense->bias.rows, sizeof(usize), 1, file);
+        fwrite(&dense->bias.cols, sizeof(usize), 1, file);
 
-                usize bias_count = dense->bias.rows * dense->bias.cols;
+        usize bias_count = dense->bias.rows * dense->bias.cols;
 
-                fwrite(dense->bias.data, sizeof(float), bias_count, file);
+        fwrite(dense->bias.data, sizeof(float), bias_count, file);
 
-                break;
-            }
-
-            default:
-                return ERROR_LAYER_UNKNOWN;
-        }
+        break;
     }
 
     return ERROR_OK;
@@ -257,45 +249,35 @@ Error network_load(Network *network, const char *file_name) {
         Layer *layer = &network->layers[i];
 
         /* Load the layer type and layer's activation */
-        fread(&layer->layer_type, sizeof(layer->layer_type), 1, file);
         fread(&layer->activation, sizeof(layer->activation), 1, file);
 
         layer->z_cache = matrix_empty();
 
-        switch (layer->layer_type) {
-            case LAYER_DENSE: {
-                Dense *dense = &layer->dense;
+        Dense *dense = &layer->dense;
 
-                /* Load matrix dimensions */
-                fread(&dense->weights.rows, sizeof(usize), 1, file);
-                fread(&dense->weights.cols, sizeof(usize), 1, file);
+        /* Load matrix dimensions */
+        fread(&dense->weights.rows, sizeof(usize), 1, file);
+        fread(&dense->weights.cols, sizeof(usize), 1, file);
 
-                /* Load matrix data */
-                usize weight_count = dense->weights.rows * dense->weights.cols;
+        /* Load matrix data */
+        usize weight_count = dense->weights.rows * dense->weights.cols;
 
-                dense->weights.data = malloc(weight_count * sizeof(float));
-                fread(dense->weights.data, sizeof(float), weight_count, file);
+        dense->weights.data = malloc(weight_count * sizeof(float));
+        fread(dense->weights.data, sizeof(float), weight_count, file);
 
-                /* Bias matrix */
-                fread(&dense->bias.rows, sizeof(usize), 1, file);
-                fread(&dense->bias.cols, sizeof(usize), 1, file);
+        /* Bias matrix */
+        fread(&dense->bias.rows, sizeof(usize), 1, file);
+        fread(&dense->bias.cols, sizeof(usize), 1, file);
 
-                usize bias_count = dense->bias.rows * dense->bias.cols;
+        usize bias_count = dense->bias.rows * dense->bias.cols;
 
-                dense->bias.data = malloc(bias_count * sizeof(float));
-                fread(dense->bias.data, sizeof(float), bias_count, file);
+        dense->bias.data = malloc(bias_count * sizeof(float));
+        fread(dense->bias.data, sizeof(float), bias_count, file);
 
-                dense->input_cache = matrix_empty();
+        dense->input_cache = matrix_empty();
 
-                matrix_create(&dense->d_weights, dense->weights.rows, dense->weights.cols);
-                matrix_create(&dense->d_bias, dense->bias.rows, dense->bias.cols);
-
-                break;
-            }
-
-            default:
-                return ERROR_LAYER_UNKNOWN;
-        }
+        matrix_create(&dense->d_weights, dense->weights.rows, dense->weights.cols);
+        matrix_create(&dense->d_bias, dense->bias.rows, dense->bias.cols);
     }
 
     return ERROR_OK;

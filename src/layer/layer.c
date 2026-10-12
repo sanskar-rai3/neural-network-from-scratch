@@ -32,22 +32,11 @@ Error layer_init(Layer *layer, const LayerConfig *config) {
     if (!layer || !config)
         return ERROR_INVALID_ARGS;
 
-    switch (config->layer_type) {
-        case LAYER_DENSE: {
-            layer->layer_type = LAYER_DENSE;
+    err = dense_init(&layer->dense, &config->dense_config);
+    if (err != ERROR_OK)
+        return err;
 
-            err = dense_init(&layer->dense, &config->dense_config);
-            if (err != ERROR_OK)
-                return err;
-
-            layer->activation = config->activation;
-
-            break;
-        }
-
-        default:
-            return ERROR_LAYER_UNKNOWN; 
-    }
+    layer->activation = config->activation;
 
     layer->z_cache = matrix_empty();
 
@@ -77,36 +66,27 @@ Error layer_forward(Matrix *output, Layer *layer, const Matrix *input) {
         return ERROR_MATRIX_INVALID_SIZE;
     }
 
-    switch (layer->layer_type) {
-        case LAYER_DENSE: {
-            /* Z = XW + b */
-            err = dense_forward(output, &layer->dense, input);
-            if (err != ERROR_OK)
-                return err;
+    /* Z = XW + b */
+    err = dense_forward(output, &layer->dense, input);
+    if (err != ERROR_OK)
+        return err;
 
-            /* Cache Z for the backward pass */
-            if (layer->z_cache.rows != output->rows ||
-                layer->z_cache.cols != output->cols ||
-               !layer->z_cache.data) {
+    /* Cache Z for the backward pass */
+    if (layer->z_cache.rows != output->rows ||
+        layer->z_cache.cols != output->cols ||
+       !layer->z_cache.data) {
 
-                matrix_destroy(&layer->z_cache);
+        matrix_destroy(&layer->z_cache);
 
-                err = matrix_create(&layer->z_cache, output->rows, output->cols);
-                if (err != ERROR_OK)
-                    return err;
-            }
-
-            matrix_copy(&layer->z_cache, output);
-
-            /* A = activation(Z) */
-            activation_forward(output, layer->activation);
-
-            break;
-        }
-
-        default:
-            return ERROR_LAYER_UNKNOWN;
+        err = matrix_create(&layer->z_cache, output->rows, output->cols);
+        if (err != ERROR_OK)
+            return err;
     }
+
+    matrix_copy(&layer->z_cache, output);
+
+    /* A = activation(Z) */
+    activation_forward(output, layer->activation);
 
     return ERROR_OK;
 }
